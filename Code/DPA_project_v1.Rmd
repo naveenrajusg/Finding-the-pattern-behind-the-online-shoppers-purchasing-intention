@@ -1,0 +1,914 @@
+---
+title: "DPA project_v1"
+author: "Naveen Raju Sreerama Raju Govinda Raju"
+date: "2023-04-04"
+output: html_document
+---
+
+```{r}
+library(ggplot2)
+library(caret)
+library(dplyr)
+library(Hmisc)
+library(magrittr)
+library(ggpubr)
+```
+
+Loading dataset
+```{r}
+#setwd("E:/DPA/project/")
+data <- read.csv("online_shoppers_intention.csv")
+
+
+head(data)
+```
+
+Number of duplicate observations
+```{r}
+sum(duplicated(data))
+```
+
+Duplicate observations
+```{r}
+data[duplicated(data), ]
+
+```
+
+Check number of observations with NA values
+```{r}
+sum(is.na(data))
+```
+
+Found out that Jan and April months is not present
+```{r}
+table(data$Month)
+```
+"as.factor", convert month column to factor data type, this is used when the column is categorical attribute with fixed number of categories, in our cases it is months of a year.
+
+"table", just shows counts of data in each month.
+Even though "June" is there in data set it is showing count as 0 because  it is denoted as "June" instead of 3 letter abbreviation "Jun" 
+```{r}
+data$Month = as.factor(data$Month)
+print(data$Month)
+table(factor(data$Month, levels = month.abb))
+```
+
+Changing "June" to 3 character abbreviation "Jun".
+data$Month is in factor data type, so we convert it to character to change "June" to "Jun" and again convert back to factor datatype
+```{r}
+class(data$Month)
+
+data$Month <- as.character(data$Month)
+data$Month[data$Month == "June"] <- "Jun"
+data$Month <- as.factor(data$Month)
+```
+Now we can see "Jun" data set count
+```{r}
+table(data$Month)
+```
+
+factor function with levels = month.abb, this will set levels based on three letter abbrevations for each month. Therefore month.abb will set levels of factor variable in order of months Jan to Dec.
+```{r}
+data$Month = factor(data$Month, levels = month.abb)
+```
+
+We can now view the months are ordered in data set with 12 levels
+```{r}
+str(data)
+
+```
+### Exploratory Data Analysis
+```{r}
+ggplot(data, aes(y = Administrative)) +
+  geom_boxplot(fill='yellow', color='gray') +
+  labs(x = "", y = "Number of Administrative pages visited") +
+  theme(axis.text.x = element_text(size=12, color="black", face="bold"),
+        axis.text.y = element_text(size=12, color="black", face="bold"),
+        axis.title = element_text(size=14, color="black", face="bold"),
+        legend.position = "none",
+        plot.title = element_text(size=16, color="black", face="bold"),
+        plot.caption = element_text(size=10, color="gray", hjust=0))
+cat("Summary")
+summary(data$Administrative)
+```
+
+```{r}
+ggplot(data, aes(y = Administrative_Duration)) +
+  geom_boxplot(fill='yellow', color='gray') +
+  labs(x = "", y = "Total time spent in Administrative pages")+ 
+  theme(axis.text.x = element_text(size=12, color="black", face="bold"),
+        axis.text.y = element_text(size=12, color="black", face="bold"),
+        axis.title = element_text(size=14, color="black", face="bold"),
+        legend.position = "none",
+        plot.title = element_text(size=16, color="black", face="bold"),
+        plot.caption = element_text(size=10, color="gray", hjust=0))
+cat("Summary")
+summary(data$Administrative_Duration)
+
+```
+```{r}
+ggplot(data, aes(y = Informational)) +
+  geom_boxplot(fill='yellow', color='gray') +
+  labs(x = "", y = "Informational", 
+       title = "Number of Informational pages visited") +
+  theme(axis.text.x = element_text(size=12, color="black", face="bold"),
+        axis.text.y = element_text(size=12, color="black", face="bold"),
+        axis.title = element_text(size=14, color="black", face="bold"),
+        legend.position = "none",
+        plot.title = element_text(size=16, color="black", face="bold"),
+        plot.caption = element_text(size=10, color="gray", hjust=0))
+cat("Summary")
+summary(data$Informational)
+```
+
+```{r}
+ggplot(data, aes(y = Informational_Duration)) +
+  geom_boxplot(fill='yellow', color='gray') +
+  labs(x = "", y = "Informational_Duration", 
+       title = "Total time spent in Informational pages") +
+  theme(axis.text.x = element_text(size=12, color="black", face="bold"),
+        axis.text.y = element_text(size=12, color="black", face="bold"),
+        axis.title = element_text(size=14, color="black", face="bold"),
+        legend.position = "none",
+        plot.title = element_text(size=16, color="black", face="bold"),
+        plot.caption = element_text(size=10, color="gray", hjust=0))
+cat("Summary")
+summary(data$Informational_Duration)
+```
+
+```{r}
+ggplot(data, aes(y = ProductRelated)) +
+  geom_boxplot(fill='yellow', color='gray') +
+  labs(x = "", y = "Informational_Duration", 
+       title = "Number of ProductRelated pages visited") +
+  theme(axis.text.x = element_text(size=12, color="black", face="bold"),
+        axis.text.y = element_text(size=12, color="black", face="bold"),
+        axis.title = element_text(size=14, color="black", face="bold"),
+        legend.position = "none",
+        plot.title = element_text(size=16, color="black", face="bold"),
+        plot.caption = element_text(size=10, color="gray", hjust=0))
+cat("Summary")
+summary(data$ProductRelated)
+```
+
+```{r}
+ggplot(data, aes(y = ProductRelated_Duration)) +
+  geom_boxplot(fill='yellow', color='gray') +
+  labs(x = "", y = "Informational_Duration", 
+       title = "Total time spent in ProductRelated pages") +
+  theme(axis.text.x = element_text(size=12, color="black", face="bold"),
+        axis.text.y = element_text(size=12, color="black", face="bold"),
+        axis.title = element_text(size=14, color="black", face="bold"),
+        legend.position = "none",
+        plot.title = element_text(size=16, color="black", face="bold"),
+        plot.caption = element_text(size=10, color="gray", hjust=0))
+cat("Summary")
+summary(data$ProductRelated_Duration)
+```
+
+```{r}
+cat("\nMedian of Number of Administrative pages visited=",summary(data$Administrative)[3])
+cat("\nMedian of Number of Informational pages visited=",summary(data$Informational)[3])
+cat("\nMedian of Number of ProductRelated pages visited=",summary(data$ProductRelated)[3],"\n")
+
+cat("\nTotal time spent in Administrative pages=",summary(data$Administrative_Duration)[3])
+cat("\nTotal time spent in InformationalRelated pages=",summary(data$Informational_Duration)[3])
+cat("\nTotal time spent in ProductRelated pages=",summary(data$ProductRelated_Duration)[3],"\n")
+
+cat("\nAnalysing number of pages vist of 3 different page categories it clearly says that customers are interested more in Product related pages rather than knowing information of the product in detail.\n")
+
+cat("\nAnalysing total time spent in 3 different page categories, it clearly says that customers spend most of the time in product related pages whereas they are not intrested in spending time in information related pages")
+```
+### Defining harmonic mean function
+```{r}
+hmean <- function(x) {
+  n <- length(x)
+  n / sum(1/x)
+}
+```
+
+
+```{r}
+ggplot(data, aes(x=Revenue, y=Administrative)) +
+  geom_boxplot(fill='yellow', color='gray') +
+  labs(x = "Revenue", y = "Number of Administrative pages visited") +
+  theme(axis.text.x = element_text(size=12, color="black", face="bold"),
+        axis.text.y = element_text(size=12, color="black", face="bold"),
+        axis.title = element_text(size=14, color="black", face="bold"),
+        legend.position = "none",
+        plot.title = element_text(size=16, color="black", face="bold"),
+        plot.caption = element_text(size=10, color="gray", hjust=0))
+
+Administrative_true<-data %>%
+  filter(Revenue == TRUE) %>%
+  group_by(Administrative)
+
+cat("\nMeadian number of adminstrative pages visted by a customer who end up buying is=",median(Administrative_true$Administrative))
+cat("\nHarmonic number of adminstrative pages visted by a customer who end up buying is=",hmean(Administrative_true$Administrative),"\n","\n")
+
+print(summary(Administrative_true$Administrative))
+
+Administrative_false<-data %>%
+  filter(Revenue == FALSE) %>%
+  group_by(Administrative)
+
+
+cat("\n\nMeadian number of adminstrative pages visted by a customer who did not end up buying is=",median(Administrative_false$Administrative))
+cat("\nHarmonic number of adminstrative pages visted by a customer who did not end up buying is=",hmean(Administrative_false$Administrative))
+cat("\n","\n")
+print(summary(Administrative_false$Administrative))
+
+```
+
+```{r}
+ggplot(data, aes(x=Revenue, y=Administrative_Duration)) +
+  geom_boxplot(fill='yellow', color='gray') +
+  labs(x = "Revenue", y = "Total time spent in Administrative pages") +
+  theme(axis.text.x = element_text(size=12, color="black", face="bold"),
+        axis.text.y = element_text(size=12, color="black", face="bold"),
+        axis.title = element_text(size=14, color="black", face="bold"),
+        legend.position = "none",
+        plot.title = element_text(size=16, color="black", face="bold"),
+        plot.caption = element_text(size=10, color="gray", hjust=0))
+
+Administrative_Duration_true<-data %>%
+  filter(Revenue == TRUE) %>%
+  group_by(Administrative_Duration)
+cat("\nMeadian duration of time spent in adminstrative pages by a customer who end up buying is=",median(Administrative_Duration_true$Administrative_Duration))
+cat("\nHarmonic duration of time spent in adminstrative pages by a customer who end up buying is=",hmean(Administrative_Duration_true$Administrative_Duration),"\n","\n")
+print(summary(Administrative_Duration_true$Administrative_Duration))
+
+Administrative_Duration_fasle<-data %>%
+  filter(Revenue == FALSE) %>%
+  group_by(Administrative_Duration)
+cat("\n\nMeadian duration of time spent in adminstrative pages by a customer who did not end up buying is=",median(Administrative_Duration_fasle$Administrative_Duration))
+cat("\nHarmonic duration of time spent in adminstrative pages by a customer who did not end up buying is=",hmean(Administrative_Duration_fasle$Administrative_Duration),"\n","\n")
+print(summary(Administrative_Duration_fasle$Administrative_Duration))
+```
+
+
+
+```{r}
+ggplot(data, aes(x=Revenue, y=Informational)) +
+  geom_boxplot(fill='yellow', color='gray') +
+  labs(x = "Revenue", y = "Number of Informational pages visited") +
+  theme(axis.text.x = element_text(size=12, color="black", face="bold"),
+        axis.text.y = element_text(size=12, color="black", face="bold"),
+        axis.title = element_text(size=14, color="black", face="bold"),
+        legend.position = "none",
+        plot.title = element_text(size=16, color="black", face="bold"),
+        plot.caption = element_text(size=10, color="gray", hjust=0))
+
+Informational_true<-data %>%
+  filter(Revenue == TRUE) %>%
+  group_by(Informational)
+
+cat("\nMeadian number of Informational pages visted by a customer who end up buying is=",median(Informational_true$Informational))
+cat("\nHarmonic number of Informational pages visted by a customer who end up buying is=",hmean(Informational_true$Informational),"\n","\n")
+
+print(summary(Informational_true$Informational))
+
+Informational_false<-data %>%
+  filter(Revenue == FALSE) %>%
+  group_by(Informational)
+cat("\n\nMeadian number of Informational pages visted by a customer who did not end up buying is=",median(Informational_false$Informational))
+cat("\nHarmonic number of Informational pages visted by a customer who did not end up buying is=",hmean(Informational_false$Informational),"\n","\n")
+
+
+print(summary(Informational_false$Informational))
+```
+
+
+```{r}
+ggplot(data, aes(x=Revenue, y=Informational_Duration)) +
+  geom_boxplot(fill='yellow', color='gray') +
+  labs(x = "Revenue", y = "Duration spent on Informational pages visited") +
+  theme(axis.text.x = element_text(size=12, color="black", face="bold"),
+        axis.text.y = element_text(size=12, color="black", face="bold"),
+        axis.title = element_text(size=14, color="black", face="bold"),
+        legend.position = "none",
+        plot.title = element_text(size=16, color="black", face="bold"),
+        plot.caption = element_text(size=10, color="gray", hjust=0))
+
+Informational_Duration_true<-data %>%
+  filter(Revenue == TRUE) %>%
+  group_by(Informational_Duration)
+
+cat("\nMeadian number of duration spent on Informational pages by a customer who end up buying is=",median(Informational_true$Informational))
+cat("\nHarmonic number of duration spent on Informational pages by a customer who end up buying is=",hmean(Informational_true$Informational),"\n","\n")
+
+print(summary(Informational_Duration_true$Informational_Duration))
+
+Informational_Duration_false<-data %>%
+  filter(Revenue == FALSE) %>%
+  group_by(Informational_Duration)
+cat("\nMeadian number of duration spent on Informational pages by a customer who did not end up buying is=",median(Informational_Duration_false$Informational))
+cat("\nHarmonic number of duration spent on Informational pages by a customer who did not end up buying is=",hmean(Informational_Duration_false$Informational),"\n","\n")
+
+print(summary(Informational_Duration_false$Informational_Duration))
+```
+
+```{r}
+ggplot(data, aes(x=Revenue, y=ProductRelated)) +
+  geom_boxplot(fill='yellow', color='gray') +
+  labs(x = "Revenue", y = "Number of ProductRelated pages visited") +
+  theme(axis.text.x = element_text(size=12, color="black", face="bold"),
+        axis.text.y = element_text(size=12, color="black", face="bold"),
+        axis.title = element_text(size=14, color="black", face="bold"),
+        legend.position = "none",
+        plot.title = element_text(size=16, color="black", face="bold"),
+        plot.caption = element_text(size=10, color="gray", hjust=0))
+
+ProductRelated_true<-data %>%
+  filter(Revenue == TRUE) %>%
+  group_by(ProductRelated)
+
+cat("\nMeadian number of ProductRelated pages visted by a customer who end up buying is=",median(ProductRelated_true$ProductRelated))
+cat("\nHarmonic number of ProductRelated pages visted by a customer who end up buying is=",hmean(ProductRelated_true$ProductRelated),"\n","\n")
+
+print(summary(ProductRelated_true$ProductRelated))
+
+ProductRelated_false<-data %>%
+  filter(Revenue == FALSE) %>%
+  group_by(ProductRelated)
+cat("\n\nMeadian number of ProductRelated pages visted by a customer who did not end up buying is=",median(ProductRelated_false$ProductRelated))
+cat("\nHarmonic number of ProductRelated pages visted by a customer who did not end up buying is=",hmean(ProductRelated_false$ProductRelated),"\n","\n")
+
+print(summary(ProductRelated_false$ProductRelated))
+```
+
+```{r}
+ggplot(data, aes(x=Revenue, y=ProductRelated_Duration)) +
+  geom_boxplot(fill='yellow', color='gray') +
+  labs(x = "Revenue", y = "Duration of ProductRelated pages visited") +
+  theme(axis.text.x = element_text(size=12, color="black", face="bold"),
+        axis.text.y = element_text(size=12, color="black", face="bold"),
+        axis.title = element_text(size=14, color="black", face="bold"),
+        legend.position = "none",
+        plot.title = element_text(size=16, color="black", face="bold"),
+        plot.caption = element_text(size=10, color="gray", hjust=0))
+
+ProductRelated_Duration_true<-data %>%
+  filter(Revenue == TRUE) %>%
+  group_by(ProductRelated_Duration)
+
+cat("\nMeadian duration of ProductRelated pages visted by a customer who end up buying is=",median(ProductRelated_Duration_true$ProductRelated_Duration))
+cat("\nHarmonic duration of ProductRelated pages visted by a customer who end up buying is=",hmean(ProductRelated_Duration_true$ProductRelated_Duration),"\n","\n")
+
+print(summary(ProductRelated_Duration_true$ProductRelated_Duration))
+
+ProductRelated_Duration_false<-data %>%
+  filter(Revenue == FALSE) %>%
+  group_by(ProductRelated_Duration)
+
+cat("\n\nMeadian duration of ProductRelated pages visted by a customer who did not end up buying is=",median(ProductRelated_Duration_false$ProductRelated_Duration))
+cat("\nHarmonic duration of ProductRelated pages visted by a customer who did not end up buying is=",hmean(ProductRelated_Duration_false$ProductRelated_Duration),"\n","\n")
+
+print(summary(ProductRelated_Duration_false$ProductRelated_Duration))
+
+```
+
+```{r}
+cat("\n\nBased on above analysis,these are the observations made:")
+cat("\nPeople who end up buying will mostly visit administrative page and spend almost 52seconds.")
+cat("\nPeople who end up not buying will mostly not visit administrative page.")
+cat("\nPeople are least interested in visiting informational page.")
+cat("\nPeople who end up buying will mostly visit product related page and spend almost 1109 seconds.")
+cat("\nPeople who will end up buying will mostly visit product related page and spend almost 510 seconds.")
+cat("\nBut people who end up buying will visit more product related than the ones who don't.")
+```
+
+```{r}
+
+
+color_scheme <- "Set2"
+plot1 <- ggdensity(data, x = "BounceRates", fill = "Revenue", color = "Revenue",
+                   add = "median", rug = TRUE, palette = color_scheme) +
+         labs(x = "Bounce Rates", y = "Density", fill = "Revenue") +
+         theme_classic()
+plot1
+
+plot2 <- ggdensity(data, x = "ExitRates", fill = "Revenue", color = "Revenue",
+                   add = "median", rug = TRUE, palette = color_scheme) +
+         labs(x = "ExitRates", y = "Density", fill = "Revenue") +
+         theme_classic()
+plot2
+
+plot3 <- ggdensity(data, x = "PageValues", fill = "Revenue", color = "Revenue",
+                   add = "median", rug = TRUE, palette = color_scheme) +
+         labs(x = "PageValues", y = "Density", fill = "Revenue") +
+         theme_classic()
+plot3
+
+```
+
+```{r}
+ggplot(data, aes(x = SpecialDay, fill = Revenue)) +
+  geom_bar(position = "dodge")
+cat("Here we can analyse that majority of revenue is on non special day, and impact of revenue due to special fay is very less.")
+```
+
+```{r}
+copy_data<-data
+
+copy_data$Month_numeric <- as.numeric(copy_data$Month)
+plot1 <- ggplot(copy_data, aes(x = Month_numeric, fill = Revenue)) +
+         geom_bar(position = "dodge") +
+         labs(x = "Month", y = "Count", fill = "Revenue") +
+         scale_x_continuous(breaks = 1:12, labels = month.abb) +
+         theme_classic()
+
+# data$Month_numeric <- as.numeric(data$Month)
+# plot1 <- ggplot(data, aes(x = Month_numeric, fill = Revenue)) +
+#          geom_bar(position = "dodge") +
+#          labs(x = "Month", y = "Count", fill = "Revenue") +
+#          scale_x_continuous(breaks = 1:12, labels = month.abb) +
+#          theme_classic()
+
+plot1
+cat("\nMost revenue is from the months of March, May, November and December")
+cat("\nLeast revenue is from the month June, July, August, September and October")
+cat("\nData is not available for January and April")
+```
+
+
+
+```{r}
+plot1 <- ggplot(data, aes(x = OperatingSystems, fill = Revenue)) +
+         geom_bar(position = "dodge") +
+         labs(x = "OperatingSystems", y = "Count", fill = "Revenue") +
+         scale_x_continuous(breaks = 1:10) +
+         theme_classic()
+
+plot1
+```
+
+```{r}
+plot1 <- ggplot(data, aes(x = Browser, fill = Revenue)) +
+         geom_bar(position = "dodge") +
+         labs(x = "Browser", y = "Count", fill = "Revenue") +
+         scale_x_continuous(breaks = 1:15) +
+         theme_classic()
+
+plot1
+```
+
+```{r}
+plot1 <- ggplot(data, aes(x = Region, fill = Revenue)) +
+         geom_bar(position = "dodge") +
+         labs(x = "Region", y = "Count", fill = "Revenue") +
+         scale_x_continuous(breaks = 1:11) +
+         theme_classic()
+
+plot1
+```
+
+```{r}
+plot1 <- ggplot(data, aes(x = TrafficType, fill = Revenue)) +
+         geom_bar(position = "dodge") +
+         labs(x = "TrafficType", y = "Count", fill = "Revenue") +
+         scale_x_continuous(breaks = 1:22) +
+         theme_classic()
+
+plot1
+```
+
+```{r}
+
+plot1 <- ggplot(data.frame(data), aes(Weekend, fill=Revenue)) + geom_bar() + labs(x = "Weekend") + labs(y = "Count")
+plot1
+
+table(data$Weekend, data$Revenue)
+cat("\nData shows that revenue on non weekend is almost thrice that of revenue on weekend")
+```
+
+```{r}
+plot1 <- ggplot(data.frame(data), aes(VisitorType, fill=Revenue)) + geom_bar() + labs(x = "Visitor type") + labs(y = "Count")
+plot1
+
+table(data$VisitorType, data$Revenue)
+cat("\nData shows that revenue from returning visitor is approximately 3.5 times as that of new visitor")
+```
+
+```{r}
+plot1 <- ggplot(data.frame(data), aes(Revenue, fill=Revenue)) + geom_bar() + labs(x = "Revenue") + labs(y = "Count")
+plot1
+
+table(data$Revenue)
+cat("\nData shows that there are more data to explain non revenue tahn revenue. That is there are approximately 5.5 times more data explaining non revenue that revenue.")
+```
+
+
+```{r}
+head(data)
+```
+Transforming categorical attribute to factor data type so as to do one hot encoding. Weekend and Revenue are not integers hence converting them to integers before converting them factor.
+```{r}
+data <- data %>% 
+  mutate(OperatingSystems = as.factor(OperatingSystems),
+         Browser = as.factor(Browser),
+         Region = as.factor(Region),
+         TrafficType = as.factor(TrafficType),
+         VisitorType = as.factor(VisitorType),
+         Weekend = as.integer(Weekend),
+         Revenue = as.integer(Revenue)
+         )
+```
+
+
+```{r}
+head(data)
+data_v2 <- data
+data_v2$Revenue <- as.factor(data_v2$Revenue)
+head(data_v2)
+```
+Converting to as.data.table we can manipulate data in efficient manner.
+```{r}
+library(mltools)
+library(data.table)
+data <- one_hot(as.data.table(data))
+head(data)
+```
+Train and test split
+
+```{r}
+library(rsample)
+split <- initial_split(data_v2, prop = .7, strata = "Revenue")
+train_woh <- training(split)
+test_woh <- testing(split)
+```
+
+Proportion Revenue True or False in train set
+```{r}
+table(train_woh$Revenue) %>% prop.table() 
+```
+Proportion Revenue True or False in test set
+```{r}
+table(test_woh$Revenue) %>% prop.table() 
+```
+The above split is for data without one hot encoding
+
+The below is the train test split for data with one hot encoding
+```{r}
+split <- initial_split(data, prop = .7, strata = "Revenue")
+train_data_oh <- training(split)
+test_data_oh <- testing(split)
+```
+
+Separating numerical and categorical attributes so as to standardize numerical attributes
+```{r}
+train_num <- train_data_oh[,1:10] 
+train_cat <- train_data_oh[,11:77]
+test_num <- test_data_oh[,1:10] 
+test_cat = test_data_oh[,11:77]
+```
+
+Scale function is used to standardize by subtracting mean for each value and dividing by standard deviation, this bring value to have mean zero and standard deviation of one.
+```{r}
+traindata_scaled = scale(train_num)
+```
+
+Scale function applied to test data set so as to get standardized based on train data set mean and standard deviation as reference.
+```{r}
+testdata_scaled = scale(test_num, center=attr(traindata_scaled, "scaled:center"), scale=attr(traindata_scaled, "scaled:scale"))
+```
+
+Combining numerical(standardized) and categorical variables
+```{r}
+train_data_oh <- cbind(traindata_scaled, train_cat)
+test_data_oh <- cbind(testdata_scaled, test_cat)
+```
+
+A we saw above that there is huge imbalance in data set as Revenue=0 is the majority. Hence the algorithm tries to over fit on majority class.Hence we use ovun.sample to over-sample minority class. The function tries to generate synthetic data points of minority class using SMOTE algorithm, this creates new observation by interpolating between the given sample in feature space. Here we are trying to increase minority class observations by two times. 
+
+Over-sampling minority class in data set with one hot encoding
+```{r}
+library(ROSE)
+N_ori = 2*length(which(train_data_oh$Revenue == 0))
+train_data_oh_oversampled <- ovun.sample(Revenue~.,data = train_data_oh, method= 'over', N = N_ori, seed = 2023)$data
+```
+
+Over-sampling minority class in data set without one hot encoding
+
+```{r}
+N_ori = 2*length(which(train_woh$Revenue == 0))
+train_data_woh_oversampled <- ovun.sample(Revenue~.,data = train_woh, method= 'over', N = N_ori, seed = 2023)$data
+```
+
+Seperating features from target variable Revenue
+```{r}
+features_woh <- setdiff(names(train_data_woh_oversampled), "Revenue")
+features_oh <- setdiff(names(train_data_oh_oversampled), "Revenue")
+```
+
+
+Naive Bayes Classifier
+
+```{r}
+x_woh <- train_data_woh_oversampled[, features_woh]
+y_woh <- train_data_woh_oversampled$Revenue
+x_oh <- train_data_oh[, ..features_oh]
+y_oh <- train_data_oh$Revenue
+```
+
+Defining 5 fold cross validation
+```{r}
+library(caret)
+library(lattice)
+train_control <- trainControl(
+  method = "cv",
+  number = 5
+)
+
+```
+
+We don not have Jan and April month data in the dataset hence Naive Bayes will ignore it
+```{r}
+
+# write.csv(data.frame(train_data_woh_oversampled), file = "x_woh.csv", row.names = FALSE)
+```
+
+Data do not have Jan and Apr month data hence it shows warning while training Naive Bayes. Hence,the Naive Bayes training function is wrapped with function suppressWarnings
+```{r}
+table(factor(x_woh$Month, levels = month.abb))
+```
+
+```{r}
+nb_woh <- suppressWarnings(caret::train(
+  x = x_woh,
+  y = y_woh,
+  method = "nb",
+  trControl = train_control
+))
+print("Navive Bayes trained without one hot encodeing")
+print(confusionMatrix(nb_woh))
+cat("Naive Bayes classifier tries to classify new observation based on conditional probability.\nAccuracy= 75.1%")
+```
+
+```{r}
+nb_oh <- suppressWarnings(caret::train(
+  x = x_oh,
+  y = as.factor(y_oh),
+  method = "nb",
+  trControl = train_control
+))
+print("Navive Bayes trained with one hot encodeing")
+print(confusionMatrix(nb_oh))
+cat("Naive Bayes classifier tries to classify new observation based on conditional probability.\nAccuracy= 84.51%")
+```
+```{r}
+
+cat("Thus Naive Bayes classifier works better when categorical variables are one hot encoded.")
+```
+k-Nearest Neighbor
+There are 77 columns in data after one hot encoding, in which last column is target variable.
+```{r}
+length(names(train_data_oh_oversampled))
+names(train_data_oh_oversampled)
+```
+
+```{r}
+library(class)
+k_nn <- knn(train_data_oh_oversampled[, 1:76], test_data_oh[, 1:76], train_data_oh_oversampled$Revenue)
+CM_knn_default <- confusionMatrix(k_nn, factor(test_data_oh$Revenue))
+print(CM_knn_default)
+
+```
+Visualizing KNN with different k values
+```{r}
+
+knn <- NULL
+knn_errors <- NULL
+
+for (kv in 1:20) {
+  knn <- knn(train_data_oh_oversampled[, 1:76], test_data_oh[, 1:76], train_data_oh_oversampled$Revenue, k = kv)
+  knn_errors[kv] <- mean(knn != test_data_oh$Revenue)
+}
+
+knn_error_plot <- as.data.frame(cbind(k=1:20, knn_errors))
+
+ggplot(knn_error_plot, aes(k, knn_errors)) +
+  geom_point() +
+  geom_line() +
+  scale_x_continuous(breaks = 1:20) +
+  theme_bw() +
+  xlab("Value of K") +
+  ylab("Error")
+
+```
+
+Best K value for KNN
+```{r}
+best_knn <- knn(train_data_oh_oversampled[, 1:76], test_data_oh[, 1:76], train_data_oh_oversampled$Revenue, k=1)
+print("Best-performance k-NN")
+```
+Confusion matrix of best KNN  with k value as 1
+```{r}
+CM_best_knn <- confusionMatrix(best_knn, factor(test_data_oh$Revenue))
+print(CM_best_knn)
+```
+```{r}
+cat("KNN is unsupervised algorithm which results in accuracy 84.54% with k value as 1. To choose best value of k we plotted a graphh of KNN error with different value of k and we found that for k=1 the model gave less error.")
+```
+Random Forest
+```{r}
+n<-length(names(train_data_woh_oversampled))
+print(names(train_data_woh_oversampled))
+print(n)
+```
+Random forests consider a random subset of predictor variables at each split to decrease correlation between trees and improve model performance. The parameter "mtry" determines the number of variables to consider at each split. Typically, a popular approach is to set "mtry" equal to the square root of the number of predictors. However, the randomForest package offers a more advanced method for selecting "mtry" based on the number of predictors. This method uses the formula "m = ceiling(log2(n))" where "m" is the rounded-up base 2 logarithm of the number of predictors in the dataset "n". This formula has been found to perform well for a diverse range of datasets.
+
+ntree=100, collection 100 trees to be constructed 
+```{r}
+suppressWarnings(library(randomForest))
+m = ceiling(log2(n))
+rf_model<-randomForest(as.factor(train_data_woh_oversampled$Revenue)~.,data=train_data_woh_oversampled,mtry=m ,ntree=100,importance=TRUE,proximity=TRUE)
+```
+
+```{r}
+random_forst_pred<-predict(rf_model,newdata=test_woh)
+CM_RF <- confusionMatrix(random_forst_pred, factor(test_woh$Revenue))
+print(CM_RF)
+cat("Thus accuracy of random forest is 89.81%")
+```
+It take very long time to re run bellow cell, thus i have stored the results in a csv file.
+Recursive Feature Elimination to build Random Forest model with all possible subsets of features.
+```{r}
+# names(train_data_woh_oversampled)
+# length(names(train_data_woh_oversampled))
+# control <- rfeControl(functions = rfFuncs, method = "cv", number = 10)
+# results <- rfe(train_data_woh_oversampled[, 1:17], train_data_woh_oversampled[, 18], sizes = c(1:17), rfeControl = control)
+
+```
+
+```{r}
+
+# write.csv(data.frame(results$variables), file = "rfe_results_variables.csv", row.names = FALSE)
+# write.csv(data.frame(results$results), file = "rfe_results_results.csv", row.names = FALSE)
+
+rfe_results_variables <- read.csv("rfe_results_variables.csv", header = TRUE)
+rfe_results_results <- read.csv("rfe_results_results.csv", header = TRUE)
+print(rfe_results_results)
+
+##below are the copied values of Accuracy from results$results
+
+RFE_acc = c(0.869431951 
+,0.848321599
+, 0.850994757
+, 0.905140123
+, 0.926730159
+, 0.944686211
+, 0.956819031
+, 0.960383398
+, 0.962919476
+, 0.964427311
+, 0.965112524
+, 0.965112618
+, 0.966483514
+, 0.966757628
+, 0.96607218
+, 0.966415115
+, 0.966552148
+)
+RFE_var = c(names(train_data_woh_oversampled[, -ncol(train_data_woh_oversampled)]))
+
+sort_df <- data.frame(RFE_var, RFE_acc)
+cat("before descending sort\n")
+print(sort_df)
+```
+
+After sorting feature variables based on Accuracy
+```{r}
+sort_df <- sort_df[order(sort_df$RFE_acc,decreasing=TRUE), ]
+print(sort_df)
+```
+
+Number of features vs Accuracy plot.
+We can see accuracy increased drastically initially as more feature variables are added later on it became almost same
+```{r}
+plot(x = RFE_acc, y = c(1:17), col="purple", xlab = "accuracy", ylab = "Number of features", pch=5)
+```
+The function "varImpPlot" uses two metrics, MeanDecreaseAccuracy (MDA) and MeanDecreaseGini (MDG), to measure the importance of features. MDA measures the decrease in accuracy when a single variable is excluded or changed, while MDG measures the decrease in node impurity.
+```{r}
+varimp<-varImpPlot(rf_model, sort = TRUE, n.var = 17, main = 'Features Importance by random forest')
+cat("\nThis shows that feature variables like Page values is most important one. Other than this few of the other important feature variables are Month, ExitRates, ProductRelated_Duration")
+cat("\n\nIn both plots we see Visitor Type and Special Day is least significant")
+```
+```{r}
+
+
+imp <- importance(rf_model, type = 1)
+cat("Feature variable importance tabel")
+print(imp)
+```
+
+```{r}
+top_features <- row.names(imp)[order(imp[,1], decreasing = TRUE)]
+
+top_features<-top_features[1:10]
+cat("\n\nTop 10 features are:",top_features)
+
+top_features <- c(top_features, "Revenue")
+
+
+cat("Training Random forest based on top 10 features")
+train_data_woh_top_10_features <- train_data_woh_oversampled[, top_features]
+
+# Train the random forest model using the top features
+m = ceiling(log2(10))
+rf_model_top_10_features <- randomForest(as.factor(train_data_woh_top_10_features$Revenue) ~ ., data = train_data_woh_top_10_features, ntree = 100, mtry = m,importance=TRUE,proximity=TRUE)
+
+test_woh_top_10_features<-test_woh[, top_features]
+
+random_forst_pred_top_10<-predict(rf_model_top_10_features,newdata=test_woh_top_10_features)
+
+CM_RF_top_10 <- confusionMatrix(random_forst_pred_top_10, factor(test_woh_top_10_features$Revenue))
+print(CM_RF_top_10)
+cat("Thus accuracy of random forest on top 10 feature variable is 89.3%\n","\nWhereas random forest on all feature variable is 89.81%\n","\nBut such a small difference in accuracy is acceptable as model complexity has decreased.")
+```
+Support vector machine
+```{r}
+library(e1071)
+print("Linear kernel SVM")
+svm_model = svm(as.factor(Revenue)~., data = train_data_oh_oversampled, kernel = "linear", scale = FALSE)
+
+svm_linear_pred <- predict(svm_model, newdata = test_data_oh)
+
+```
+```{r}
+svm_linear_pred_CM <- confusionMatrix(svm_linear_pred, factor(test_data_oh$Revenue))
+print(svm_linear_pred_CM)
+```
+
+```{r}
+print("Radial kernel SVM")
+svm_model = svm(as.factor(Revenue)~., data=train_data_oh_oversampled, kernel = "radial", scale = FALSE)
+
+
+svm_radial_pred <- predict(svm_model, newdata = test_data_oh)
+
+```
+```{r}
+svm_radial_pred_CM <- confusionMatrix(svm_radial_pred, factor(test_data_oh$Revenue))
+print(svm_radial_pred_CM)
+```
+```{r}
+cat("\nAccuracy of SVM using linear kernel=86.76%")
+cat("\nAccuracy of SVM using Radial basis kernel=87.43%")
+cat("\nUsing Radial basis kernel in SVM improves accuracy by marginal percentage.")
+```
+
+XGBoost
+```{r}
+suppressWarnings(library(xgboost))
+library(caret)
+library(dplyr)
+
+
+train_xg <- train_data_woh_top_10_features
+test_xg <- test_woh_top_10_features
+
+tr<-data.matrix(train_xg [,-11])
+te<-data.matrix(test_xg [,-11])
+
+train_labels <- as.numeric(as.character(train_xg[,11]))
+test_labels <- as.numeric(as.character(test_xg[,11]))
+
+
+levels(test_labels)
+
+dtrain <- xgb.DMatrix(data = tr, label = train_labels)
+
+dtest <- xgb.DMatrix(data = te, label = test_labels)
+
+
+params <- list(
+  objective = "binary:logistic",
+  eta = 0.3,
+  max_depth = 6,
+  eval_metric = "auc"
+)
+
+# Train the model
+xgb_model <- xgb.train(
+  params,
+  dtrain,
+  nrounds = 100,
+  watchlist = list(train = dtrain, test = dtest),
+  early_stopping_rounds = 10,
+  verbose = TRUE
+)
+
+
+predictions <- predict(xgb_model, dtest)
+pred_labels_factor <- factor(ifelse(predictions > 0.5, "1", "0"), levels = c("0", "1"))
+
+
+confusion_matrix <- confusionMatrix(pred_labels_factor, test_labels_factor)
+cat(sprintf("Test accuracy: %f\n", confusion_matrix$overall[1]))
+```
+
+
+
+
+

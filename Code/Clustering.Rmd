@@ -1,0 +1,122 @@
+---
+title: "Clustering"
+author: "Karthik Kumar Kaiplody"
+date: "2023-04-01"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, message=FALSE}
+# Load required libraries
+library(tidyverse)
+library(factoextra)
+library(cluster)
+library(fpc)
+library(ggplot2)
+library(gridExtra) 
+```
+
+```{r, message=FALSE}
+# Load the required libraries
+library(ggplot2)
+library(corrplot)
+
+# Load the dataset from UCI repository
+dataset <- read.csv("https://archive.ics.uci.edu/ml/machine-learning-databases/00468/online_shoppers_intention.csv")
+
+# Subset the dataset to include only numeric columns
+numeric_cols <- sapply(dataset, is.numeric)
+numeric_data <- dataset[,numeric_cols]
+
+# Compute the correlation matrix
+cor_matrix <- cor(numeric_data)
+
+# Set the plot size and font size
+par(cex.main=1.2, mar=c(0,0,2,0))
+
+# Create the correlation plot using corrplot with larger plot size
+corrplot(cor_matrix, method="circle", type="lower", tl.col="black", tl.srt=45, 
+         mar=c(0, 0, 2, 0), 
+         addgrid.col="gray", 
+         addrect=4, 
+         rect.col="gray", 
+         cl.ratio=0.2, 
+         number.cex=0.7, 
+         tl.cex=0.7, 
+         title="Online Shoppers Purchase Intention Correlation Plot")
+
+```
+
+
+
+### Aim of cluster analysis is to group observation into distinct clusters.
+### KMeans Clustering
+```{r, warning=FALSE, message=FALSE}
+# Load the Online Shopper Purchase Intention dataset
+data <- read.csv("https://archive.ics.uci.edu/ml/machine-learning-databases/00468/online_shoppers_intention.csv")
+
+# Remove unnecessary columns
+features <- subset(data, select = c(Browser, Region, TrafficType, VisitorType))
+
+# Convert VisitorType and Revenue to factors
+features$VisitorType <- as.factor(features$VisitorType)
+
+# One-hot encode categorical features
+features <- model.matrix(~. - 1, features)
+
+# Scale the features
+data <- scale(features)
+
+# Determine the optimal number of clusters
+wss <- sapply(1:10, function(k){kmeans(data, k, nstart=10 )$tot.withinss})
+plot(1:10, wss, type="b", xlab="Number of Clusters", ylab="Within groups sum of squares")
+
+# Perform k-means clustering with 2 clusters
+set.seed(123)
+kmeans_result <- kmeans(data, 2)
+
+# Visualize the clusters
+library(factoextra)
+fviz_cluster(kmeans_result, data = data, stand = FALSE, geom = "point", ellipse.type = "convex", ellipse.alpha = 0.2, main = "Cluster Visualization")
+```
+
+```{r}
+# Perform k-means clustering with 3 clusters
+set.seed(123)
+kmeans_result <- kmeans(data, 3)
+
+# Visualize the clusters
+library(factoextra)
+fviz_cluster(kmeans_result, data = data, stand = FALSE, geom = "point", ellipse.type = "convex", ellipse.alpha = 0.2, main = "Cluster Visualization")
+```
+### DBSCAN Clusters:
+---
+```{r, warning=FALSE, message=FALSE}
+# Perform DBSCAN clustering
+dbscan_res <- dbscan(data, eps = 0.5, MinPts = 2)
+
+# Visualize clusters using PCA
+pca_res <- prcomp(data, scale = TRUE)
+fviz_cluster(list(data = pca_res$x, cluster = dbscan_res$cluster), geom = "point", frame.type = "norm", ggtheme = theme_minimal())
+```
+### Hierarchical Clustering
+```{r, warning=FALSE, message=FALSE}
+# Select the columns of interest
+data <- read.csv("https://archive.ics.uci.edu/ml/machine-learning-databases/00468/online_shoppers_intention.csv")
+cols_of_interest <- c("Browser", "Region", "TrafficType", "VisitorType")
+data <- data %>% select(cols_of_interest)
+
+distances = dist(data)
+clusterData = hclust(distances, method = "ward.D2")
+
+plot(clusterData)
+```
+```{r}
+clusterGroups = cutree(clusterData, k =5)
+tapply(data$Region, clusterGroups, mean)
+tapply(data$Browser , clusterGroups, mean)
+tapply(data$TrafficType, clusterGroups, mean)
+```
